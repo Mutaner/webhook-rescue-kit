@@ -2,12 +2,12 @@
   "events": [
     {
       "provider": "stripe",
-      "event_id": "evt_test_001",
+      "event_id": "evt_test_invoice_001_a",
       "event_type": "invoice.paid",
       "expected_outcome": "accepted",
       "payload": {
-        "customer_id": "cus_demo_001",
-        "invoice_id": "in_demo_001",
+        "customer_id": "cus_credit_demo_001",
+        "invoice_id": "invoice_demo_001",
         "credits": 100,
         "amount_paid": 5000,
         "currency": "usd"
@@ -15,18 +15,31 @@
     },
     {
       "provider": "stripe",
-      "event_id": "evt_test_001",
+      "event_id": "evt_test_invoice_001_a",
       "event_type": "invoice.paid",
       "expected_outcome": "accepted",
       "payload": {
-        "customer_id": "cus_demo_001",
-        "invoice_id": "in_demo_001",
+        "customer_id": "cus_credit_demo_001",
+        "invoice_id": "invoice_demo_001",
         "credits": 100,
         "amount_paid": 5000,
         "currency": "usd",
         "delivery_attempt": 2
       }
+    },
+    {
+      "provider": "stripe",
+      "event_id": "evt_test_invoice_001_b",
+      "event_type": "invoice.paid",
+      "expected_outcome": "accepted",
+      "payload": {
+        "customer_id": "cus_credit_demo_001",
+        "invoice_id": "invoice_demo_001",
+        "credits": 100,
+        "amount_paid": 5000,
+        "currency": "usd",
+        "delivery_attempt": 1
+      }
     }
   ]
 }
-

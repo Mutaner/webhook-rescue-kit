@@ -12,7 +12,13 @@ def generate_report(db_path: Path, output_path: Path) -> str:
         events = store.list_events(conn)
         accounts = store.list_accounts(conn)
 
-    duplicates = [row for row in events if row["status"] == "duplicate"]
+    duplicates = [row for row in events if row["status"] in {"duplicate", "duplicate_object"}]
+    stripe_duplicate_credit_findings = [
+        row
+        for row in duplicates
+        if row["provider"] == "stripe"
+        and row["event_type"] in {"invoice.paid", "checkout.session.completed"}
+    ]
     failed = [
         row
         for row in events
@@ -23,25 +29,27 @@ def generate_report(db_path: Path, output_path: Path) -> str:
     desyncs = [row for row in events if row["status"] == "desync"]
 
     lines: list[str] = [
-        "# Webhook Recovery Report",
+        "# Stripe Duplicate Credit Guard Diagnostic",
         "",
         "## Executive Summary",
         f"- Events processed: {len(events)}",
-        f"- Duplicate events detected: {len(duplicates)}",
+        f"- Stripe duplicate credit findings: {len(stripe_duplicate_credit_findings)}",
         f"- Failed events captured: {len(failed)}",
         f"- Replayed events: {len(replayed)}",
         f"- Subscription desync findings: {len(desyncs)}",
         "",
-        "## Events Processed",
+        "## Stripe Duplicate Credit Findings",
     ]
-    lines.extend(_event_lines(events))
-
-    lines.extend(["", "## Duplicate Events Detected"])
-    if duplicates:
-        for row in duplicates:
+    if stripe_duplicate_credit_findings:
+        for row in stripe_duplicate_credit_findings:
+            label = (
+                "Duplicate Stripe Object Event"
+                if row["status"] == "duplicate_object"
+                else "Duplicate Stripe Event ID"
+            )
             lines.append(
-                f"- `{row['event_id']}` was detected as a duplicate of `{row['duplicate_of_event_id']}`; "
-                "credit grant was skipped to prevent double counting."
+                f"- {label}: `{row['event_id']}` was detected as a duplicate of "
+                f"`{row['duplicate_of_event_id']}`; credit grant was skipped to prevent double counting."
             )
     else:
         lines.append("- None detected.")
@@ -57,7 +65,7 @@ def generate_report(db_path: Path, output_path: Path) -> str:
     else:
         lines.append("- No accounts recorded.")
 
-    lines.extend(["", "## Failed Events Captured"])
+    lines.extend(["", "## Shopify Failed Order Recovery"])
     if failed:
         for row in failed:
             lines.append(
@@ -67,14 +75,14 @@ def generate_report(db_path: Path, output_path: Path) -> str:
     else:
         lines.append("- No failed webhook payloads captured.")
 
-    lines.extend(["", "## Replay Candidates"])
+    lines.extend(["", "## Shopify Replay Candidates"])
     if replay_candidates:
         for row in replay_candidates:
             lines.append(f"- `{row['event_id']}` can be replayed locally after handler fixes.")
     else:
         lines.append("- None currently pending.")
 
-    lines.extend(["", "## Replayed Events"])
+    lines.extend(["", "## Simulated Replayed Events"])
     if replayed:
         for row in replayed:
             lines.append(
@@ -90,6 +98,31 @@ def generate_report(db_path: Path, output_path: Path) -> str:
     else:
         lines.append("- No subscription state mismatches detected.")
 
+    lines.extend(["", "## Events Processed"])
+    lines.extend(_event_lines(events))
+
+    lines.extend(["", "## What I would check in your repo"])
+    lines.extend(
+        [
+            "- Where Stripe `invoice.paid` or checkout success handlers grant account credits.",
+            "- Whether event ID idempotency is stored before the credit side effect runs.",
+            "- Whether a second guard exists for Stripe object IDs such as invoice, payment intent, checkout session, or subscription IDs.",
+            "- Whether duplicate deliveries return a safe success response without reapplying credits.",
+            "- Whether failed order payloads are retained with enough context for reviewed local replay.",
+        ]
+    )
+
+    lines.extend(["", "## Acceptance criteria"])
+    lines.extend(
+        [
+            "- Replaying the same Stripe event ID does not increase credits twice.",
+            "- Receiving a different Stripe event ID for the same invoice/payment object does not increase credits twice.",
+            "- The credit demo customer remains separate from the subscription desync demo customer.",
+            "- Replay remains simulated locally and performs no external API calls.",
+            "- The generated report names duplicate Stripe object events clearly.",
+        ]
+    )
+
     lines.extend(["", "## Recommended Fixes"])
     fixes = [row for row in events if row["suggested_fix"]]
     if fixes:
@@ -103,9 +136,10 @@ def generate_report(db_path: Path, output_path: Path) -> str:
             "- Store failed payloads with failure reasons for replay.",
             "- Run periodic subscription reconciliation against provider state snapshots.",
             "",
-            "## Limitations",
+            "## No-Live-API / No-Secrets Safety Boundary",
             "- This is a local proof asset using synthetic data only.",
             "- No real Stripe or Shopify APIs are called.",
+            "- No API keys, webhook signing secrets, customer data, or provider credentials are required.",
             "- No production authentication, signing verification, queueing, or alerting is included.",
             "- Replay is simulated locally and should be replaced with reviewed production-safe logic.",
             "",

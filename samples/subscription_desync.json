@@ -6,7 +6,7 @@
       "event_type": "subscription.status_check",
       "expected_outcome": "desync",
       "payload": {
-        "customer_id": "cus_demo_001",
+        "customer_id": "cus_desync_demo_001",
         "subscription_id": "sub_demo_001",
         "local_subscription_status": "inactive",
         "provider_subscription_status": "active"
@@ -14,4 +14,3 @@
     }
   ]
 }
-

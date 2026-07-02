@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from webhook_rescue.models import SampleEvent
 from webhook_rescue import store
@@ -52,6 +53,28 @@ def _ingest_stripe_event(conn, event: SampleEvent):
             suggested_fix="Keep event-id idempotency keys before applying account credits.",
         )
 
+    duplicate_object = _find_duplicate_stripe_object_event(conn, event)
+    if duplicate_object is not None:
+        object_id = _stripe_object_id(payload)
+        return store.insert_event(
+            conn,
+            provider=event.provider,
+            event_id=event.event_id,
+            event_type=event.event_type,
+            status="duplicate_object",
+            payload=payload,
+            failure_reason=(
+                "Duplicate Stripe object event already processed for "
+                f"{event.event_type} object {object_id}; credit grant skipped."
+            ),
+            duplicate_of_event_id=duplicate_object["event_id"],
+            credit_delta=0,
+            suggested_fix=(
+                "Use provider, event type, and Stripe object ID as a second idempotency guard "
+                "before applying customer credits."
+            ),
+        )
+
     if event.event_type == "subscription.status_check":
         customer_id = payload["customer_id"]
         local_status = payload["local_subscription_status"]
@@ -100,6 +123,45 @@ def _ingest_stripe_event(conn, event: SampleEvent):
         failure_reason=event.failure_reason,
         credit_delta=credit_delta,
     )
+
+
+def _find_duplicate_stripe_object_event(conn, event: SampleEvent):
+    object_id = _stripe_object_id(event.payload)
+    if object_id is None:
+        return None
+
+    for row in store.list_events(conn):
+        if row["provider"] != "stripe":
+            continue
+        if row["event_type"] != event.event_type:
+            continue
+        if row["status"] in {"duplicate", "duplicate_object"}:
+            continue
+        existing_payload = store.decode_payload(row)
+        if _stripe_object_id(existing_payload) == object_id:
+            return row
+    return None
+
+
+def _stripe_object_id(payload: dict[str, Any]) -> str | None:
+    for key in (
+        "invoice_id",
+        "payment_intent_id",
+        "checkout_session_id",
+        "subscription_id",
+    ):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+
+    data = payload.get("data")
+    if isinstance(data, dict):
+        obj = data.get("object")
+        if isinstance(obj, dict):
+            value = obj.get("id")
+            if isinstance(value, str) and value:
+                return value
+    return None
 
 
 def _ingest_shopify_event(conn, event: SampleEvent):

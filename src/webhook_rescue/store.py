@@ -116,11 +116,15 @@ def get_latest_event(conn: sqlite3.Connection, event_id: str) -> sqlite3.Row:
     return row
 
 
+def decode_payload(row: sqlite3.Row) -> dict[str, Any]:
+    return json.loads(row["payload_json"])
+
+
 def find_first_non_duplicate(conn: sqlite3.Connection, event_id: str) -> sqlite3.Row | None:
     return conn.execute(
         """
         SELECT * FROM events
-        WHERE event_id = ? AND status != 'duplicate'
+        WHERE event_id = ? AND status NOT IN ('duplicate', 'duplicate_object')
         ORDER BY id ASC
         LIMIT 1
         """,
@@ -176,4 +180,3 @@ def list_events(conn: sqlite3.Connection) -> list[sqlite3.Row]:
 
 def list_accounts(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute("SELECT * FROM accounts ORDER BY id ASC").fetchall()
-

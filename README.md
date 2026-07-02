@@ -6,6 +6,43 @@ It demonstrates how a small recovery workflow can detect duplicate provider even
 
 This repository uses only synthetic sample data. It does not use real API keys, call Stripe or Shopify APIs, process customer data, or claim production readiness.
 
+## For Technical Founders
+
+If your Stripe or Shopify webhooks are failing, duplicating events, or causing subscription/order state drift, this repo shows the kind of fixed-scope recovery artifact I can build:
+
+- idempotency check;
+- failed-event inventory;
+- replay/reconciliation script;
+- Markdown recovery report;
+- implementation notes.
+
+This is not a SaaS product. It is a proof-of-work repo for a small paid pilot.
+
+## Paid Pilot Scope
+
+A focused paid pilot covers one webhook flow, for example:
+
+- Stripe `invoice.paid`;
+- Stripe `customer.subscription.updated`;
+- Shopify `orders/create`;
+- Shopify `orders/updated`.
+
+Deliverables usually include idempotency review, failed-event capture, replay/reconciliation tooling, tests where practical, rollback notes, and a short recovery report.
+
+See [`docs/paid-pilot.md`](docs/paid-pilot.md) for the full scope and boundaries.
+
+## Demo Report Preview
+
+The demo generates a recovery-style report showing:
+
+```text
+Total events
+Stripe duplicate credit findings
+Failed events
+Replay candidates
+Recommended fixes
+```
+
 ## Buyer Pain This Targets
 
 Webhook failures often show up as billing credits applied twice, Shopify orders not reaching internal systems, missed subscription updates, and unclear retry history. A buyer with those problems usually needs a focused audit and a small recovery path before committing to larger reliability work.
@@ -14,8 +51,9 @@ This demo shows the shape of that work without touching any live platform.
 
 ## What The CLI Demonstrates
 
-- Stripe duplicate event idempotency with `evt_test_001`.
-- Prevention of double credit counting for a paid invoice event.
+- Stripe duplicate event idempotency with `evt_test_invoice_001_a`.
+- Stripe object-level idempotency with `evt_test_invoice_001_b` for `invoice_demo_001`.
+- Prevention of double credit counting for paid invoice events.
 - Shopify `orders/create` failed-event capture.
 - A persisted replay queue using SQLite.
 - Local simulated replay for failed events.
@@ -58,7 +96,7 @@ webhook-rescue init
 webhook-rescue ingest --file samples/stripe_duplicate_events.json
 webhook-rescue ingest --file samples/shopify_failed_orders.json
 webhook-rescue ingest --file samples/subscription_desync.json
-webhook-rescue inspect --event-id evt_test_001
+webhook-rescue inspect --event-id evt_test_invoice_001_b
 webhook-rescue replay --event-id shopify_order_failed_timeout
 webhook-rescue report --output outputs/recovery_report.md
 ```
@@ -67,18 +105,18 @@ All commands use SQLite state. Tests pass temporary database paths with `--db` e
 
 ## Example Output
 
-Inspecting the Stripe duplicate scenario after demo shows one accepted event and account credits of `100`, even though the sample contains two deliveries with the same event ID:
+Inspecting the Stripe object duplicate scenario after demo shows account credits of `100`, even though the sample contains two different Stripe event IDs for the same invoice object:
 
 ```text
-Event evt_test_001
+Event evt_test_invoice_001_b
 provider: stripe
 type: invoice.paid
-status: duplicate
-failure_reason: Duplicate event ID already processed; credit grant skipped.
-account: cus_demo_001 credits=100 local_subscription=inactive provider_subscription=active
+status: duplicate_object
+failure_reason: Duplicate Stripe object event already processed for invoice.paid object invoice_demo_001; credit grant skipped.
+account: cus_credit_demo_001 credits=100 local_subscription=unknown provider_subscription=unknown
 ```
 
-The report includes sections for processed events, duplicate events, failed events, replay candidates, replayed events, subscription desync findings, recommended fixes, and limitations.
+The report includes sections for Stripe duplicate credit findings, account credit state, Shopify failed order recovery, replay candidates, replayed events, subscription desync findings, acceptance criteria, recommended fixes, and the no-live-API/no-secrets safety boundary.
 
 ## Safety Notes
 

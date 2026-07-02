@@ -14,13 +14,16 @@ def test_report_is_generated_from_sqlite_state(tmp_path: Path) -> None:
     markdown = report.generate_report(db, output)
 
     assert output.exists()
-    assert "## Duplicate Events Detected" in markdown
-    assert "evt_test_001" in markdown
-    assert "## Failed Events Captured" in markdown
+    assert "# Stripe Duplicate Credit Guard Diagnostic" in markdown
+    assert "## Stripe Duplicate Credit Findings" in markdown
+    assert "Duplicate Stripe Object Event" in markdown
+    assert "evt_test_invoice_001_b" in markdown
+    assert "## Shopify Failed Order Recovery" in markdown
     assert "shopify_order_failed_timeout" in markdown
-    assert "## Replayed Events" in markdown
+    assert "## Simulated Replayed Events" in markdown
     assert "shopify_order_failed_missing_field" in markdown
     assert "## Subscription Desync Findings" in markdown
     assert "sub_desync_001" in markdown
-    assert "## Limitations" in markdown
-
+    assert "## What I would check in your repo" in markdown
+    assert "## Acceptance criteria" in markdown
+    assert "## No-Live-API / No-Secrets Safety Boundary" in markdown

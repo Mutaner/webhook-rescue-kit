@@ -25,11 +25,10 @@ def test_subscription_desync_is_detected_and_persisted(tmp_path: Path) -> None:
 
     with store.connect(db) as conn:
         event = store.get_latest_event(conn, "sub_desync_001")
-        account = store.get_account(conn, "cus_demo_001")
+        account = store.get_account(conn, "cus_desync_demo_001")
 
     assert event["status"] == "desync"
     assert "Local subscription is inactive" in event["failure_reason"]
     assert account is not None
     assert account["subscription_status_local"] == "inactive"
     assert account["subscription_status_provider"] == "active"
-
