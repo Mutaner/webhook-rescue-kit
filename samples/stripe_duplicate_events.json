@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "provider": "stripe",
+      "event_id": "evt_test_001",
+      "event_type": "invoice.paid",
+      "expected_outcome": "accepted",
+      "payload": {
+        "customer_id": "cus_demo_001",
+        "invoice_id": "in_demo_001",
+        "credits": 100,
+        "amount_paid": 5000,
+        "currency": "usd"
+      }
+    },
+    {
+      "provider": "stripe",
+      "event_id": "evt_test_001",
+      "event_type": "invoice.paid",
+      "expected_outcome": "accepted",
+      "payload": {
+        "customer_id": "cus_demo_001",
+        "invoice_id": "in_demo_001",
+        "credits": 100,
+        "amount_paid": 5000,
+        "currency": "usd",
+        "delivery_attempt": 2
+      }
+    }
+  ]
+}
+

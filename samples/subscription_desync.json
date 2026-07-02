@@ -1,0 +1,17 @@
+{
+  "events": [
+    {
+      "provider": "stripe",
+      "event_id": "sub_desync_001",
+      "event_type": "subscription.status_check",
+      "expected_outcome": "desync",
+      "payload": {
+        "customer_id": "cus_demo_001",
+        "subscription_id": "sub_demo_001",
+        "local_subscription_status": "inactive",
+        "provider_subscription_status": "active"
+      }
+    }
+  ]
+}
+
