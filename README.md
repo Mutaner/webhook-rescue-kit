@@ -29,8 +29,6 @@ A focused paid pilot covers one webhook flow, for example:
 
 Deliverables usually include idempotency review, failed-event capture, replay/reconciliation tooling, tests where practical, rollback notes, and a short recovery report.
 
-See [`docs/paid-pilot.md`](docs/paid-pilot.md) for the full scope and boundaries.
-
 ## Demo Report Preview
 
 The demo generates a recovery-style report showing:
