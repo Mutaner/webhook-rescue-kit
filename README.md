@@ -27,7 +27,7 @@ This demo shows the shape of that work without touching any live platform.
 Requires Python 3.11+.
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -e ".[dev]"
@@ -43,6 +43,12 @@ The demo resets `.webhook_rescue/webhook_rescue.db`, ingests all sample files, r
 
 ```text
 outputs/recovery_report.md
+```
+
+A committed example report is available at:
+
+```text
+outputs/example_recovery_report.md
 ```
 
 ## Example Commands
