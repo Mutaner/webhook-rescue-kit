@@ -1,0 +1,6 @@
+company,buyer_type,source_url,pain_signal,contact_page,priority,status,next_action
+Platter,Shopify app,https://community.shopify.dev/t/help-webhook-logging-debug/13789,orders/create webhook debug pain,https://www.platter.com,HIGH,new,Find founder/technical contact
+WebContrive,Shopify agency,https://community.shopify.dev/t/webhook-deletion-tracking-inquiry/24885,removed webhook subscriptions,https://www.webcontrive.com,HIGH,new,Send agency overflow message
+OpenCode / Anomaly,Devtool SaaS,https://github.com/anomalyco/opencode/issues/28402,duplicate Stripe webhook can grant free credits,https://opencode.ai,HIGH,new,Send technical note
+Wasp Open SaaS,SaaS boilerplate,https://github.com/wasp-lang/open-saas/issues/688,missing Stripe idempotency double-counts credits,https://wasp.sh,MEDIUM,new,Offer PR/proof asset
+n8n,Automation platform,https://github.com/n8n-io/n8n/issues/23893,duplicate Stripe webhooks on workflow publish,https://n8n.io/contact,MEDIUM,new,Send repro/technical angle
