@@ -1,62 +1,47 @@
 # webhook-rescue-kit
 
-`webhook-rescue-kit` is a local Python CLI proof asset for a fixed-scope service: **Stripe / Shopify Webhook Failure Recovery Pilot**.
+`webhook-rescue-kit` is a local Python CLI proof asset for **Stripe Duplicate Credit Guard**: duplicate-safe webhook side effects for credit grants and similar billing actions.
 
-It demonstrates how a small recovery workflow can detect duplicate provider events, store failed webhook payloads, mark replay candidates, simulate safe local replay, identify subscription state drift, and generate a Markdown recovery report.
+The main scenario is Stripe `invoice.paid` duplicate handling. The CLI demonstrates both same-event duplicate delivery and a different Stripe event ID pointing at the same invoice/payment object. In both cases, duplicate credit grants are skipped and recorded in a generated diagnostic report.
 
-This repository uses only synthetic sample data. It does not use real API keys, call Stripe or Shopify APIs, process customer data, or claim production readiness.
+Shopify failed-order replay is included as a secondary example of failed webhook capture and local replay bookkeeping. It is not the primary offer or a full Shopify recovery system.
 
-## For Technical Founders
-
-If your Stripe or Shopify webhooks are failing, duplicating events, or causing subscription/order state drift, this repo shows the kind of fixed-scope recovery artifact I can build:
-
-- idempotency check;
-- failed-event inventory;
-- replay/reconciliation script;
-- Markdown recovery report;
-- implementation notes.
-
-This is not a SaaS product. It is a proof-of-work repo for a small paid pilot.
-
-## Paid Pilot Scope
-
-A focused paid pilot covers one webhook flow, for example:
-
-- Stripe `invoice.paid`;
-- Stripe `customer.subscription.updated`;
-- Shopify `orders/create`;
-- Shopify `orders/updated`.
-
-Deliverables usually include idempotency review, failed-event capture, replay/reconciliation tooling, tests where practical, rollback notes, and a short recovery report.
-
-## Demo Report Preview
-
-The demo generates a recovery-style report showing:
-
-```text
-Total events
-Stripe duplicate credit findings
-Failed events
-Replay candidates
-Recommended fixes
-```
-
-## Buyer Pain This Targets
-
-Webhook failures often show up as billing credits applied twice, Shopify orders not reaching internal systems, missed subscription updates, and unclear retry history. A buyer with those problems usually needs a focused audit and a small recovery path before committing to larger reliability work.
-
-This demo shows the shape of that work without touching any live platform.
+This repository uses synthetic sample data only. It does not use real API keys, call Stripe or Shopify APIs, process customer data, or claim production readiness.
 
 ## What The CLI Demonstrates
 
-- Stripe duplicate event idempotency with `evt_test_invoice_001_a`.
-- Stripe object-level idempotency with `evt_test_invoice_001_b` for `invoice_demo_001`.
-- Prevention of double credit counting for paid invoice events.
-- Shopify `orders/create` failed-event capture.
-- A persisted replay queue using SQLite.
+- Same Stripe event ID duplicate detection.
+- Different Stripe event ID for the same invoice/payment object.
+- Skipped duplicate credit grants before account credits are incremented.
+- Failed Shopify order payload capture as a secondary replay example.
 - Local simulated replay for failed events.
-- Subscription state desync detection.
-- A Markdown recovery report generated from SQLite state.
+- Subscription state desync detection from synthetic provider snapshots.
+- A generated Markdown diagnostic report.
+- Tests covering idempotency, replay updates, desync detection, and report generation.
+
+This is not a SaaS product, gateway, monitoring platform, or full webhook system. It is a small proof-of-work CLI that makes the duplicate-side-effect boundary easy to inspect.
+
+## Safety Boundary
+
+- Synthetic data only.
+- No real Stripe or Shopify API calls.
+- No secrets required.
+- No production customer data.
+- Local SQLite state only.
+- Replay is simulated locally and does not send network requests.
+
+## Demo Report Preview
+
+The demo generates `outputs/recovery_report.md`, with a committed example at `outputs/example_recovery_report.md`. The report includes:
+
+- Stripe duplicate credit findings.
+- Account credit state.
+- Shopify failed order recovery.
+- Replay candidates and simulated replay results.
+- Subscription desync findings.
+- Acceptance criteria.
+- Recommended fixes.
+- No-live-API/no-secrets safety boundary.
 
 ## Install
 
@@ -75,16 +60,10 @@ pip install -e ".[dev]"
 webhook-rescue demo
 ```
 
-The demo resets `.webhook_rescue/webhook_rescue.db`, ingests all sample files, replays one failed Shopify event, and writes:
+The demo resets `.webhook_rescue/webhook_rescue.db`, ingests all sample files, replays one failed Shopify event locally, and writes:
 
 ```text
 outputs/recovery_report.md
-```
-
-A committed example report is available at:
-
-```text
-outputs/example_recovery_report.md
 ```
 
 ## Example Commands
@@ -114,16 +93,6 @@ failure_reason: Duplicate Stripe object event already processed for invoice.paid
 account: cus_credit_demo_001 credits=100 local_subscription=unknown provider_subscription=unknown
 ```
 
-The report includes sections for Stripe duplicate credit findings, account credit state, Shopify failed order recovery, replay candidates, replayed events, subscription desync findings, acceptance criteria, recommended fixes, and the no-live-API/no-secrets safety boundary.
-
-## Safety Notes
-
-- Uses synthetic sample payloads only.
-- Does not call real Stripe, Shopify, or other external APIs.
-- Does not require API keys or secrets.
-- Stores local SQLite files only.
-- Replay is simulated locally and does not send network requests.
-
 ## What Is Not Included
 
 - Production webhook signature verification.
@@ -133,20 +102,11 @@ The report includes sections for Stripe duplicate credit findings, account credi
 - Multi-tenant access controls.
 - A complete production replay safety review.
 
-## Paid Pilot This Demonstrates
+## Engineering Review Notes
 
-### Stripe / Shopify Webhook Failure Recovery Pilot
+The useful review surface is small: `samples/` defines synthetic provider events, `src/webhook_rescue/ingest.py` contains duplicate detection, `src/webhook_rescue/report.py` renders the diagnostic report, and `tests/` verifies the local behavior.
 
-Fixed-scope deliverables:
-
-- webhook failure audit;
-- idempotency check;
-- failed-event capture design;
-- replay/reconciliation script;
-- markdown recovery report;
-- implementation notes.
-
-This proof asset maps to a paid pilot by showing the concrete artifacts a buyer would receive: a failure inventory, idempotency findings, replay candidates, reconciliation notes, and a concise recovery report. The production version would be scoped against the buyer's real systems, reviewed for platform terms and security requirements, and implemented without relying on this demo's synthetic shortcuts.
+For commercial context, see `docs/paid-pilot.md`. That document is intentionally scoped as background, not a claim that this repository is deployable production infrastructure.
 
 ## Tests
 

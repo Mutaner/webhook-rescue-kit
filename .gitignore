@@ -7,6 +7,11 @@ __pycache__/
 *.db
 .webhook_rescue/
 .pytest_cache/
+
+# Local sales/outreach notes
+sales/
+
+# Python packaging artifacts
 *.egg-info/
 dist/
 build/
