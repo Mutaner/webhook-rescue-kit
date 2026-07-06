@@ -1,5 +1,7 @@
 # webhook-rescue-kit
 
+[![Tests](https://github.com/Mutaner/webhook-rescue-kit/actions/workflows/tests.yml/badge.svg)](https://github.com/Mutaner/webhook-rescue-kit/actions/workflows/tests.yml)
+
 `webhook-rescue-kit` is a local Python CLI proof asset for **Stripe Duplicate Credit Guard**: duplicate-safe webhook side effects for credit grants and similar billing actions.
 
 The main scenario is Stripe `invoice.paid` duplicate handling. The CLI demonstrates both same-event duplicate delivery and a different Stripe event ID pointing at the same invoice/payment object. In both cases, duplicate credit grants are skipped and recorded in a generated diagnostic report.
@@ -35,6 +37,18 @@ This is not a SaaS product, gateway, monitoring platform, or full webhook system
 This repo models duplicate Stripe delivery as a credit-ledger idempotency problem. A webhook retry must not imply a new credit operation.
 
 Event ID dedupe is useful, but the balance mutation should also be protected by a credit operation identity around the actual credit grant. See [docs/credit-ledger-boundary.md](docs/credit-ledger-boundary.md).
+
+## Architecture Boundary
+
+```text
+Stripe webhook
+  -> processed_event_identity
+  -> credit_operation_identity
+  -> credit ledger state
+  -> balance mutation once
+```
+
+Webhook delivery is not the business boundary; the balance mutation is the business boundary. Event ID dedupe helps, but credit operation identity protects the actual credit grant. This repo models that boundary locally with synthetic data.
 
 ## Demo Report Preview
 
@@ -108,11 +122,15 @@ account: cus_credit_demo_001 credits=100 local_subscription=unknown provider_sub
 - Multi-tenant access controls.
 - A complete production replay safety review.
 
+## Framework Patch Examples
+
+The CLI is Python because it is a small local proof asset. Real buyer code may be Next.js, Express, Rails, Laravel, or another framework. See [docs/framework-patch-examples.md](docs/framework-patch-examples.md) for pseudocode showing where the credit-ledger boundary would sit.
+
 ## Engineering Review Notes
 
 The useful review surface is small: `samples/` defines synthetic provider events, `src/webhook_rescue/ingest.py` contains duplicate detection, `src/webhook_rescue/report.py` renders the diagnostic report, and `tests/` verifies the local behavior.
 
-For commercial context, see `docs/paid-pilot.md`. That document is intentionally scoped as background, not a claim that this repository is deployable production infrastructure.
+For neutral client scope notes, see [docs/client-scope-notes.md](docs/client-scope-notes.md). That document is background for webhook reliability review, not a claim that this repository is deployable production infrastructure.
 
 ## Tests
 

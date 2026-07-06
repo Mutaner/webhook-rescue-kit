@@ -23,7 +23,7 @@
 - `shopify_order_failed_timeout` can be replayed locally after handler fixes.
 
 ## Simulated Replayed Events
-- `shopify_order_failed_missing_field` replayed at `2026-07-06T17:08:43+00:00`: simulated local replay succeeded; no external API was called.
+- `shopify_order_failed_missing_field` replayed at `2026-07-06T17:34:12+00:00`: simulated local replay succeeded; no external API was called.
 
 ## Subscription Desync Findings
 - `sub_desync_001`: Local subscription is inactive; provider subscription is active.
