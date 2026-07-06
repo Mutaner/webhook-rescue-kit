@@ -30,6 +30,12 @@ This is not a SaaS product, gateway, monitoring platform, or full webhook system
 - Local SQLite state only.
 - Replay is simulated locally and does not send network requests.
 
+## Credit Ledger Boundary
+
+This repo models duplicate Stripe delivery as a credit-ledger idempotency problem. A webhook retry must not imply a new credit operation.
+
+Event ID dedupe is useful, but the balance mutation should also be protected by a credit operation identity around the actual credit grant. See [docs/credit-ledger-boundary.md](docs/credit-ledger-boundary.md).
+
 ## Demo Report Preview
 
 The demo generates `outputs/recovery_report.md`, with a committed example at `outputs/example_recovery_report.md`. The report includes:

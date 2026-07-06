@@ -133,6 +133,7 @@ def generate_report(db_path: Path, output_path: Path) -> str:
     lines.extend(
         [
             "- Persist provider event IDs before side effects.",
+            "- Enforce a unique credit operation key around the actual balance mutation, not only the webhook event receipt.",
             "- Store failed payloads with failure reasons for replay.",
             "- Run periodic subscription reconciliation against provider state snapshots.",
             "",

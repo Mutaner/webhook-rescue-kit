@@ -23,7 +23,7 @@
 - `shopify_order_failed_timeout` can be replayed locally after handler fixes.
 
 ## Simulated Replayed Events
-- `shopify_order_failed_missing_field` replayed at `2026-07-03T07:06:00+00:00`: simulated local replay succeeded; no external API was called.
+- `shopify_order_failed_missing_field` replayed at `2026-07-06T17:08:43+00:00`: simulated local replay succeeded; no external API was called.
 
 ## Subscription Desync Findings
 - `sub_desync_001`: Local subscription is inactive; provider subscription is active.
@@ -58,6 +58,7 @@
 - `shopify_order_failed_timeout`: Move slow fulfillment work behind a queue and replay the stored payload.
 - `sub_desync_001`: Replay missed subscription webhook or run a reconciliation job.
 - Persist provider event IDs before side effects.
+- Enforce a unique credit operation key around the actual balance mutation, not only the webhook event receipt.
 - Store failed payloads with failure reasons for replay.
 - Run periodic subscription reconciliation against provider state snapshots.
 
